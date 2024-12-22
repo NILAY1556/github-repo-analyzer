@@ -2,6 +2,7 @@ console.log("Popup script loaded!");
 
 document.addEventListener("DOMContentLoaded", () => {
     const repoDetailsDiv = document.getElementById("repo-details");
+    const modelSelect = document.getElementById("model-select");
     const analyzeButton = document.getElementById("analyze-button");
     const chatButton = document.getElementById("chat-button");
     const analysisArea = document.getElementById("analysis-area");
@@ -11,7 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const chatInput = document.getElementById("chat-input");
     const sendChatButton = document.getElementById("send-chat-button");
 
-    let repoContextForChat = ""; // We'll store relevant context here for chat
+    let repoContextForChat = "";
 
     // Event listener for "Analyze Repo" button
     analyzeButton.addEventListener("click", async () => {
@@ -19,7 +20,8 @@ document.addEventListener("DOMContentLoaded", () => {
         chatArea.style.display = "none";
         analysisOutput.textContent = "Analyzing repository...";
         const repoFullName = repoDetailsDiv.querySelector('h3')?.textContent;
-        const analysis = await analyzeRepository(repoFullName);
+        const selectedModel = modelSelect.value;
+        const analysis = await analyzeRepository(repoFullName, selectedModel);
         analysisOutput.textContent = analysis;
     });
 
@@ -27,7 +29,6 @@ document.addEventListener("DOMContentLoaded", () => {
     chatButton.addEventListener("click", () => {
         chatArea.style.display = "block";
         analysisArea.style.display = "none";
-        // Potentially fetch and prepare initial context here if needed
     });
 
     // Event listener for "Send" chat message
@@ -35,19 +36,20 @@ document.addEventListener("DOMContentLoaded", () => {
         const message = chatInput.value.trim();
         if (message) {
             const repoFullName = repoDetailsDiv.querySelector('h3')?.textContent;
+            const selectedModel = modelSelect.value;
             appendMessage("user", message);
             chatInput.value = "";
-            const response = await sendMessageToChatbot(message, repoFullName);
+            const response = await sendMessageToChatbot(message, repoFullName, selectedModel);
             appendMessage("assistant", response);
         }
     });
 
-    async function analyzeRepository(repoFullName) {
+    async function analyzeRepository(repoFullName, selectedModel) {
         try {
             const response = await fetch("http://localhost:8000/analyze_repo", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ repo_full_name: repoFullName }),
+                body: JSON.stringify({ repo_full_name: repoFullName, selected_model: selectedModel }),
             });
             if (!response.ok) {
                 const errorData = await response.json();
@@ -61,12 +63,12 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    async function sendMessageToChatbot(message, repoFullName) {
+    async function sendMessageToChatbot(message, repoFullName, selectedModel) {
         try {
             const response = await fetch("http://localhost:8000/chat", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ message: message, repo_full_name: repoFullName }),
+                body: JSON.stringify({ message: message, repo_full_name: repoFullName, selected_model: selectedModel }),
             });
             if (!response.ok) {
                 const errorData = await response.json();
@@ -84,10 +86,9 @@ document.addEventListener("DOMContentLoaded", () => {
         const messageDiv = document.createElement("div");
         messageDiv.textContent = `${sender}: ${message}`;
         chatHistory.appendChild(messageDiv);
-        chatHistory.scrollTop = chatHistory.scrollHeight; // Scroll to bottom
+        chatHistory.scrollTop = chatHistory.scrollHeight;
     }
 
-    // Existing listener for repo details
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         if (message.action === "repoDetails") {
             console.log("Received repo details:", message.payload);
@@ -99,61 +100,3 @@ document.addEventListener("DOMContentLoaded", () => {
         repoDetailsDiv.innerHTML = `<h3>${details.full_name}</h3><p>${details.description || "No description provided."}</p>`;
     }
 });
-
-
-
-
-
-// console.log("Popup script loaded!");
-
-// document.addEventListener("DOMContentLoaded", () => {
-//   const analysisResultsDiv = document.getElementById("analysis-results");
-
-//   // Listen for repo details
-//   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-//     if (message.action === "repoDetails") {
-//       console.log("Received repo details:", message.payload);
-//       displayRepoDetails(message.payload);
-//     } else if (message.action === "repoFileStructure") {
-//       console.log("Received repo file structure:", message.payload);
-//       displayFileStructure(message.payload);
-//     }
-//   });
-
-//   // Function to display repository details in the popup
-//   function displayRepoDetails(details) {
-//     analysisResultsDiv.innerHTML = `
-//       <h3>${details.full_name}</h3>
-//       <p>${details.description || "No description provided."}</p>
-//       <p><strong>Stars:</strong> ${details.stargazers_count}</p>
-//       <p><strong>Forks:</strong> ${details.forks_count}</p>
-//       <p><strong>Language:</strong> ${details.language || "Not specified"}</p>
-//       <h4>File Structure:</h4>
-//       <ul id="file-list"></ul>
-//     `;
-//   }
-
-//   // Function to display the file structure
-//   function displayFileStructure(fileStructure) {
-//     const fileListUl = document.getElementById("file-list");
-//     fileListUl.innerHTML = ""; // Clear previous list
-
-//     // Limit the number of files displayed for brevity
-//     const maxFilesToShow = 10;
-//     const filesToShow = fileStructure.slice(0, maxFilesToShow);
-
-//     filesToShow.forEach((item) => {
-//       const listItem = document.createElement("li");
-//       listItem.textContent = item.path;
-//       fileListUl.appendChild(listItem);
-//     });
-
-//     if (fileStructure.length > maxFilesToShow) {
-//       const moreItem = document.createElement("li");
-//       moreItem.textContent = `... and ${
-//         fileStructure.length - maxFilesToShow
-//       } more files.`;
-//       fileListUl.appendChild(moreItem);
-//     }
-//   }
-// });
