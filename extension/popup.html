@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>GitHub Repo Analyzer</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+    <h1>GitHub Repo Analyzer</h1>
+    <div id="repo-details">
+        <p>Analyzing the current repository...</p>
+    </div>
+
+    <div id="action-buttons">
+        <button id="analyze-button">Analyze Repo</button>
+        <button id="chat-button">Chat with Repo</button>
+    </div>
+
+    <div id="analysis-area" style="display: none;">
+        <h4>Repo Analysis:</h4>
+        <div id="analysis-output"></div>
+    </div>
+
+    <div id="chat-area" style="display: none;">
+        <h4>Chat with Repo Context:</h4>
+        <div id="chat-history"></div>
+        <input type="text" id="chat-input" placeholder="Ask a question about the repo">
+        <button id="send-chat-button">Send</button>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+</html>
